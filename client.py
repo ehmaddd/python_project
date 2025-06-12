@@ -11,14 +11,21 @@ try:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
         print(f"{timestamp()} Connected to server at {HOST}:{PORT}")
-        while True:
-            message = input("Enter message ('exit' to quit): ")
-            s.sendall(message.encode())
-            if message.lower() == 'exit':
-                print(f"{timestamp()} Disconnected from server.")
-                break
-            data = s.recv(1024)
-            print(f"{timestamp()} Server replied: {data.decode()}")
+        try:
+            while True:
+                message = input("Enter message ('exit' to quit): ")
+                s.sendall(message.encode())
+                if message.lower() == 'exit':
+                    print(f"{timestamp()} Disconnected from server.")
+                    break
+                data = s.recv(1024)
+                print(f"{timestamp()} Server replied: {data.decode()}")
+        except KeyboardInterrupt:
+            print(f"\n{timestamp()} Client interrupted with Ctrl+C. Disconnecting gracefully.")
+            try:
+                s.sendall("exit".encode())  # Notify server of disconnection
+            except:
+                pass
 except ConnectionRefusedError:
     print(f"{timestamp()} Connection failed: Server is not running.")
 except Exception as e:
