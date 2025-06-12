@@ -1,37 +1,25 @@
 import socket
+from datetime import datetime
 
-def start_client():
-    # Create a TCP/IP socket
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    
-    # Define server address and port
-    server_address = ('localhost', 12345)
-    
-    try:
-        # Connect to the server
-        print(f"Connecting to {server_address[0]}:{server_address[1]}")
-        client_socket.connect(server_address)
-        
+def timestamp():
+    return datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+
+HOST = '127.0.0.1'
+PORT = 65432
+
+try:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, PORT))
+        print(f"{timestamp()} Connected to server at {HOST}:{PORT}")
         while True:
-            # Get user input
-            message = input("Enter message to send (or 'exit' to quit): ")
+            message = input("Enter message ('exit' to quit): ")
+            s.sendall(message.encode())
             if message.lower() == 'exit':
+                print(f"{timestamp()} Disconnected from server.")
                 break
-            
-            # Send message to server
-            client_socket.sendall(message.encode())
-            
-            # Receive response from server
-            response = client_socket.recv(1024).decode()
-            print(f"Server response: {response}")
-    
-    except ConnectionRefusedError:
-        print("Error: Server is not running.")
-    
-    finally:
-        # Close the connection
-        client_socket.close()
-        print("Connection closed")
-
-if __name__ == "__main__":
-    start_client()
+            data = s.recv(1024)
+            print(f"{timestamp()} Server replied: {data.decode()}")
+except ConnectionRefusedError:
+    print(f"{timestamp()} Connection failed: Server is not running.")
+except Exception as e:
+    print(f"{timestamp()} Client error: {e}")
